@@ -19,10 +19,10 @@
 
 ```bash
 # 从源码安装（推荐）
-pip install git+https://github.com/<org>/aster-mcp.git
+pip install git+https://github.com/asterdex/aster-mcp.git
 
 # 或克隆后本地安装
-git clone https://github.com/<org>/aster-mcp.git && cd aster-mcp
+git clone https://github.com/asterdex/aster-mcp.git && cd aster-mcp
 pip install -e .
 ```
 

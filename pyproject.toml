@@ -5,12 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "aster-mcp"
 version = "0.1.0"
-description = "Aster 期货交易所 MCP 服务 - 为 AI Agent 提供行情、交易、账户等工具"
+description = "Aster 期货 + 现货 MCP 服务 - 为 AI Agent 提供行情、交易、账户等工具"
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
 authors = [{ name = "Aster MCP" }]
-keywords = ["aster", "mcp", "trading", "futures", "ai", "agent"]
+keywords = ["aster", "mcp", "trading", "futures", "spot", "ai", "agent"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -28,6 +28,10 @@ dependencies = [
     "cryptography>=41.0",
     "eth-account>=0.10",
 ]
+
+[project.urls]
+Repository = "https://github.com/asterdex/aster-mcp"
+Documentation = "https://github.com/asterdex/aster-mcp#readme"
 
 [project.optional-dependencies]
 dev = [

@@ -1,5 +1,7 @@
 # Aster MCP Server
 
+[![GitHub](https://img.shields.io/badge/GitHub-asterdex%2Faster--mcp-blue)](https://github.com/asterdex/aster-mcp)
+
 基于 [Model Context Protocol](https://modelcontextprotocol.io/) 的 **Aster 期货 + 现货** MCP 服务，让 AI Agent（如 Cursor、Claude、LangChain）能够安全地查询行情、下单、查持仓与账户。
 
 ## 功能概览
@@ -16,7 +18,7 @@
 ```bash
 pip install -e .
 # 或
-pip install git+https://github.com/<org>/aster-mcp.git
+pip install git+https://github.com/asterdex/aster-mcp.git
 ```
 
 ## 快速开始
