@@ -7,6 +7,7 @@ Aster FAPI v3 客户端（EIP-712 密钥签名）
 参考: https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api-v3_CN.md
 """
 
+import re
 import time
 import requests
 from typing import Any, Dict, List, Optional
@@ -19,6 +20,13 @@ try:
 except ImportError:
     _HAS_ETH_ACCOUNT = False
 
+# Regex for validating a 64-hex-char private key (with optional 0x prefix)
+_PK_RE = re.compile(r'^(0x)?[0-9a-fA-F]{64}$')
+
+# EIP-712 domain for Aster v3 API signing.
+# Note: chainId 1666 is an off-chain signing identifier specific to AsterDex.
+# It is NOT the Harmony ONE network chainId. Do not confuse with on-chain chainIds
+# (ETH=1, BSC=56, Arbitrum=42161).
 # EIP-712 域配置（与 Aster v3 文档一致）
 EIP712_DOMAIN = {
     "name": "AsterSignTransaction",
@@ -50,7 +58,9 @@ class AsterClientV3:
         self.user = user.strip()
         self.signer = signer.strip()
         self._private_key = private_key.strip()
-        if self._private_key and not self._private_key.startswith("0x"):
+        if not _PK_RE.match(self._private_key):
+            raise ValueError("Invalid private key: must be 64 hex chars (with or without 0x prefix)")
+        if not self._private_key.startswith("0x"):
             self._private_key = "0x" + self._private_key
         self.base_url = base_url.rstrip("/")
         self.session = requests.Session()
@@ -58,17 +68,17 @@ class AsterClientV3:
             "Content-Type": "application/x-www-form-urlencoded",
             "User-Agent": "aster-mcp/0.1.0",
         })
-        self._last_nonce_ms = 0
+        self._last_nonce_us = 0
         self._nonce_seq = 0
 
     def _next_nonce(self) -> int:
-        now_ms = int(time.time() * 1000)
-        if now_ms == self._last_nonce_ms:
+        now_us = int(time.time() * 1_000_000)
+        if now_us == self._last_nonce_us:
             self._nonce_seq += 1
         else:
-            self._last_nonce_ms = now_ms
+            self._last_nonce_us = now_us
             self._nonce_seq = 0
-        return now_ms * 1_000_000 + self._nonce_seq
+        return now_us + self._nonce_seq
 
     def _sign_eip712(self, params: Dict[str, Any]) -> str:
         """EIP-712 签名：params 转字符串，加入 nonce/user/signer，生成 signature"""
@@ -110,14 +120,21 @@ class AsterClientV3:
             params["signature"] = self._sign_eip712(params)
 
         method = method.upper()
-        if method == "GET":
-            resp = self.session.get(url, params=params, timeout=30)
-        elif method in ("POST", "PUT", "DELETE"):
-            resp = self.session.request(
-                method, url, data=params, timeout=30
-            )
-        else:
-            raise ValueError(f"Unsupported method: {method}")
+        for _attempt in range(4):  # 1 initial + 3 retries
+            if method == "GET":
+                resp = self.session.get(url, params=params, timeout=(5, 15))
+            elif method in ("POST", "PUT", "DELETE"):
+                resp = self.session.request(
+                    method, url, data=params, timeout=(5, 15)
+                )
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+            if resp.status_code in (429, 418) and _attempt < 3:
+                retry_after = int(resp.headers.get("Retry-After", 1))
+                time.sleep(retry_after * (2 ** _attempt))
+                continue
+            break
+
         resp.raise_for_status()
         return resp.json()
 
