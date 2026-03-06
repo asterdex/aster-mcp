@@ -57,7 +57,7 @@ aster-mcp test main
 | 设置/其他 | `set_leverage`, `set_margin_mode`, `transfer_funds`, `get_income`, `get_commission_rate`, `get_leverage_bracket` | `get_spot_transaction_history`, `get_spot_commission_rate`, `transfer_spot_futures` |
 | 系统     | `get_server_info` | |
 
-详细参数与对接说明见 [Aster-MCP 外部对接文档](docs/Aster-MCP外部对接文档.md)。
+详细参数与对接说明见 [Aster-MCP 外部对接文档](docs/Aster-MCP外部对接文档.md)（中文）、[Aster-MCP External Integration Guide](docs/Aster-MCP-External-Integration.md)（English）。
 
 ## 项目结构
 
