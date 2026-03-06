@@ -50,14 +50,22 @@ class AsterClient:
         if signed:
             params["timestamp"] = int(time.time() * 1000)
             params["signature"] = self._sign(params)
-        if method.upper() == "GET":
-            resp = self.session.get(url, params=params, timeout=30)
-        elif method.upper() == "POST":
-            resp = self.session.post(url, params=params, timeout=30)
-        elif method.upper() == "DELETE":
-            resp = self.session.delete(url, params=params, timeout=30)
-        else:
-            raise ValueError(f"Unsupported method: {method}")
+
+        for _attempt in range(4):  # 1 initial + 3 retries
+            if method.upper() == "GET":
+                resp = self.session.get(url, params=params, timeout=(5, 15))
+            elif method.upper() == "POST":
+                resp = self.session.post(url, data=params, timeout=(5, 15))
+            elif method.upper() == "DELETE":
+                resp = self.session.delete(url, data=params, timeout=(5, 15))
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+            if resp.status_code in (429, 418) and _attempt < 3:
+                retry_after = int(resp.headers.get("Retry-After", 1))
+                time.sleep(retry_after * (2 ** _attempt))
+                continue
+            break
+
         resp.raise_for_status()
         return resp.json()
 

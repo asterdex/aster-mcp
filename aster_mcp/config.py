@@ -213,6 +213,12 @@ class ConfigManager:
         if backup_path is None:
             backup_path = str(self.config_dir / f"config_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
         shutil.copy2(self.config_file, backup_path)
+        logger.warning(
+            "Backup does NOT include the encryption key file (.key). "
+            "Without the .key file, encrypted fields in the backup cannot be decrypted. "
+            "Back up '%s' separately and store it securely.",
+            self.key_file,
+        )
         return backup_path
 
     @staticmethod

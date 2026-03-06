@@ -117,13 +117,30 @@ class SimpleAsterMCPServer:
             symbol: str,
             side: str,
             order_type: str,
-            quantity: float,
+            quantity: str,
             price: Optional[float] = None,
             stop_price: Optional[float] = None,
             time_in_force: str = "GTC",
             reduce_only: bool = False,
+            dry_run: bool = False,
         ) -> Dict[str, Any]:
-            """下单。order_type: LIMIT, MARKET, STOP, STOP_MARKET 等"""
+            """Create a futures order. WARNING: this places a LIVE order unless dry_run=True.
+            order_type: LIMIT, MARKET, STOP, STOP_MARKET, etc.
+            quantity: string to preserve decimal precision.
+            dry_run: if True, return an order preview without executing."""
+            if dry_run:
+                return {
+                    "dry_run": True,
+                    "account_id": account_id,
+                    "symbol": symbol,
+                    "side": side,
+                    "order_type": order_type,
+                    "quantity": quantity,
+                    "price": price,
+                    "stop_price": stop_price,
+                    "time_in_force": time_in_force,
+                    "reduce_only": reduce_only,
+                }
             return t.create_order(
                 account_id, symbol, side, order_type, quantity,
                 price, stop_price, time_in_force, reduce_only,
@@ -243,13 +260,30 @@ class SimpleAsterMCPServer:
             symbol: str,
             side: str,
             order_type: str,
-            quantity: Optional[float] = None,
+            quantity: Optional[str] = None,
             quote_order_qty: Optional[float] = None,
             price: Optional[float] = None,
             stop_price: Optional[float] = None,
             time_in_force: str = "GTC",
+            dry_run: bool = False,
         ) -> Dict[str, Any]:
-            """现货下单。MARKET 买可用 quote_order_qty，否则用 quantity"""
+            """Create a spot order. WARNING: this places a LIVE order unless dry_run=True.
+            MARKET buy can use quote_order_qty, otherwise use quantity.
+            quantity: string to preserve decimal precision.
+            dry_run: if True, return an order preview without executing."""
+            if dry_run:
+                return {
+                    "dry_run": True,
+                    "account_id": account_id,
+                    "symbol": symbol,
+                    "side": side,
+                    "order_type": order_type,
+                    "quantity": quantity,
+                    "quote_order_qty": quote_order_qty,
+                    "price": price,
+                    "stop_price": stop_price,
+                    "time_in_force": time_in_force,
+                }
             return t.create_spot_order(
                 account_id, symbol, side, order_type,
                 quantity, quote_order_qty, price, stop_price, time_in_force,
@@ -342,13 +376,12 @@ class SimpleAsterMCPServer:
 
         @self.mcp.tool
         def get_server_info() -> Dict[str, Any]:
-            """MCP 服务信息、已配置账户数、工具列表"""
+            """MCP server info: version, configured account count, supported markets."""
             accounts = self.config_manager.list_accounts()
             return {
                 "server_name": "aster-mcp",
                 "version": "0.1.0",
                 "configured_accounts": len(accounts),
-                "accounts": list(accounts.keys()) if accounts else [],
                 "supported_markets": ["futures", "spot"],
                 "total_tools": 44,
             }

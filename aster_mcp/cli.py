@@ -57,7 +57,7 @@ def config(account_id: Optional[str], auth_type: str) -> None:
                 signer = click.prompt("Signer (API 钱包地址)", hide_input=False)
                 private_key = click.prompt("Private Key (signer 私钥)", hide_input=True)
                 if account_id in accounts:
-                    if cm._config["accounts"][account_id].get("auth_type") == "eip712":
+                    if accounts.get(account_id, {}).get("auth_type") == "eip712":
                         cm.update_account_v3(account_id, user=user, signer=signer, private_key=private_key,
                                             base_url=base_url, description=description)
                         click.echo(f"✓ V3 账户 {account_id} 已更新")
@@ -69,10 +69,10 @@ def config(account_id: Optional[str], auth_type: str) -> None:
                     cm.add_account_v3(account_id, user, signer, private_key, base_url=base_url, description=description)
                     click.echo(f"✓ V3 账户 {account_id} 已添加")
             else:
-                api_key = click.prompt("API Key", hide_input=False)
+                api_key = click.prompt("API Key", hide_input=True)
                 api_secret = click.prompt("API Secret", hide_input=True)
                 if account_id in accounts:
-                    if cm._config["accounts"][account_id].get("auth_type") == "eip712":
+                    if accounts.get(account_id, {}).get("auth_type") == "eip712":
                         cm.remove_account(account_id)
                         cm.add_account(account_id, api_key, api_secret, base_url=base_url, description=description)
                         click.echo(f"✓ 已切换为 HMAC 账户 {account_id}")
@@ -101,12 +101,13 @@ def _interactive_setup(cm: ConfigManager) -> None:
         base_url = click.prompt("Base URL", default="https://fapi.asterdex.com")
         description = click.prompt("账户描述 (可选)", default="")
         try:
+            existing = cm.list_accounts()
             if auth_choice == "v3":
                 user = click.prompt("User (主账户钱包地址)")
                 signer = click.prompt("Signer (API 钱包地址)")
                 private_key = click.prompt("Private Key (signer 私钥)", hide_input=True)
-                if account_id in cm._config["accounts"]:
-                    if cm._config["accounts"][account_id].get("auth_type") == "eip712":
+                if account_id in existing:
+                    if existing.get(account_id, {}).get("auth_type") == "eip712":
                         cm.update_account_v3(account_id, user=user, signer=signer, private_key=private_key,
                                             base_url=base_url, description=description)
                     else:
@@ -116,10 +117,10 @@ def _interactive_setup(cm: ConfigManager) -> None:
                     cm.add_account_v3(account_id, user, signer, private_key, base_url=base_url, description=description)
                 click.echo(f"✓ V3 账户 {account_id} 配置成功")
             else:
-                api_key = click.prompt("API Key")
+                api_key = click.prompt("API Key", hide_input=True)
                 api_secret = click.prompt("API Secret", hide_input=True)
-                if account_id in cm._config["accounts"]:
-                    if cm._config["accounts"][account_id].get("auth_type") == "eip712":
+                if account_id in existing:
+                    if existing.get(account_id, {}).get("auth_type") == "eip712":
                         cm.remove_account(account_id)
                         cm.add_account(account_id, api_key, api_secret, base_url=base_url, description=description)
                     else:
